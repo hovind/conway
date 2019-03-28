@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Main exposing (Cell, Model, Msg(..), World, add, alive, deadCells, dimension, directions, init, main, neighbouringCells, neighbours, newCells, remainingCells, showBool, tick, toWorld, update, view)
 
 import Browser
 import Dict
@@ -83,7 +83,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( toWorld <| Set.fromList [ ( 3, 4 ), ( 4, 4 ), ( 5, 4 ) ]
+    ( Dict.fromList [ ( ( 4, 4 ), () ), ( ( 4, 5 ), () ), ( ( 4, 6 ), () ) ]
     , Cmd.none
     )
 
