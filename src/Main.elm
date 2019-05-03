@@ -1,4 +1,4 @@
-module Main exposing (Cell, Model, Msg(..), World, add, alive, deadCells, dimension, directions, init, main, neighbouringCells, neighbours, newCells, remainingCells, showBool, tick, toWorld, update, view)
+module Main exposing (Cell, Model, Msg(..), World, add, alive, deadCells, dimension, directions, init, main, neighbouringCells, neighbours, newCells, remainingCells, showBool, tick, update, view)
 
 import Browser
 import Dict
@@ -25,30 +25,30 @@ add ( a1, a2 ) ( b1, b2 ) =
     ( a1 + b1, a2 + b2 )
 
 
-directions : Set.Set Cell
+directions : World
 directions =
     Set.fromList [ ( 1, 0 ), ( 1, 1 ), ( 0, 1 ), ( -1, 1 ), ( -1, 0 ), ( -1, -1 ), ( 0, -1 ), ( 1, -1 ) ]
 
 
-neighbouringCells : Cell -> Set.Set Cell
+neighbouringCells : Cell -> World
 neighbouringCells cell =
     Set.map (add cell) directions
 
 
 alive : World -> Cell -> Bool
 alive world cell =
-    Dict.get cell world == Just ()
+    Set.member cell world
 
 
-neighbours : World -> Cell -> Set.Set Cell
+neighbours : World -> Cell -> World
 neighbours world cell =
     neighbouringCells cell
         |> Set.filter (alive world)
 
 
-deadCells : World -> Set.Set Cell
+deadCells : World -> World
 deadCells world =
-    Dict.keys world
+    Set.toList world
         |> List.map (neighbouringCells >> Set.toList)
         |> List.concat
         |> Set.fromList
@@ -61,20 +61,13 @@ newCells world =
         |> Set.filter (\deadCell -> Set.size (neighbours world deadCell) == 3)
 
 
-remainingCells : World -> Set.Set Cell
+remainingCells : World -> World
 remainingCells world =
-    Dict.keys world
-        |> Set.fromList
-        |> Set.filter (\cell -> Set.size (neighbours world cell) == 2 || Set.size (neighbours world cell) == 3)
-
-
-toWorld : Set.Set Cell -> World
-toWorld =
-    Set.foldr (\element accumulator -> Dict.insert element () accumulator) Dict.empty
+    Set.filter (\cell -> Set.size (neighbours world cell) == 2 || Set.size (neighbours world cell) == 3) world
 
 
 type alias World =
-    Dict.Dict Cell ()
+    Set.Set Cell
 
 
 type alias Model =
@@ -83,7 +76,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Dict.fromList [ ( ( 4, 4 ), () ), ( ( 4, 5 ), () ), ( ( 4, 6 ), () ) ]
+    ( Set.fromList [ ( 5, 4 ), ( 5, 5 ), ( 6, 4 ), ( 6, 5 ) ]
     , Cmd.none
     )
 
@@ -98,7 +91,7 @@ type Msg
 
 tick : World -> World
 tick world =
-    toWorld <| Set.union (newCells world) (remainingCells world)
+    Set.union (newCells world) (remainingCells world)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -108,7 +101,7 @@ update (Tick _) world =
 
 dimension : Int
 dimension =
-    9
+    20
 
 
 showBool : Bool -> Element.Element msg
@@ -138,7 +131,7 @@ view model =
     Element.layout [] <|
         Element.row [ Element.centerX, Element.centerY ] <|
             List.map (Element.column [] << List.map showBool) <|
-                List.indexedMap (\i column -> List.indexedMap (\j () -> Dict.get ( i, j ) model == Just ()) column) <|
+                List.indexedMap (\i column -> List.indexedMap (\j () -> Set.member ( i, j ) model) column) <|
                     List.repeat dimension (List.repeat dimension ())
 
 

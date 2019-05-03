@@ -24,7 +24,7 @@ cell =
 
 world : Fuzz.Fuzzer World
 world =
-    Fuzz.map (toWorld << Set.fromList) <| Fuzz.list cell
+    Fuzz.map Set.fromList <| Fuzz.list cell
 
 
 all : Test
@@ -32,8 +32,8 @@ all =
     describe "A Test Suite"
         [ fuzz world "Block finder" <|
             \world_ ->
-                Expect.true "Is a block" <| world_ /= tick world_ || Dict.isEmpty world_
+                Expect.true "Is a block" <| world_ /= tick world_ || Set.isEmpty world_
         , fuzz world "Period 2 pulsar finder" <|
             \world_ ->
-                Expect.true "Is a pulsar" <| world_ /= tick (tick world_) || Dict.isEmpty world_
+                Expect.true "Is a pulsar" <| world_ /= tick (tick world_) || Set.isEmpty world_
         ]
